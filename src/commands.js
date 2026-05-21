@@ -583,7 +583,17 @@ export const commands = [
 
       await interaction.deferReply({ ephemeral: true });
 
-      const members = await interaction.guild.members.fetch();
+      let members;
+
+      try {
+        members = await interaction.guild.members.fetch();
+      } catch {
+        await interaction.editReply(
+          "Nao consegui listar os membros do cargo. Ative o Server Members Intent no Discord Developer Portal e reinicie o bot."
+        );
+        return;
+      }
+
       const valorantMembers = members.filter(
         (member) => !member.user.bot && member.roles.cache.has(config.valorantRoleId)
       );

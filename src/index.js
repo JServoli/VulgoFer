@@ -12,11 +12,7 @@ import { loadServerStore, saveServerStore } from "./serverStore.js";
 import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
 const commandMap = new Map(
