@@ -561,10 +561,7 @@ export const commands = [
       .addSubcommand((subcommand) =>
         subcommand
           .setName("chamar")
-          .setDescription("Chama alguem para jogar Valorant no privado.")
-          .addUserOption((option) =>
-            option.setName("membro").setDescription("Quem chamar para o VAVA.").setRequired(true)
-          )
+          .setDescription("Chama no privado todo mundo com o cargo Valorant.")
       ),
     async execute(interaction) {
       const subcommand = interaction.options.getSubcommand();
@@ -584,22 +581,34 @@ export const commands = [
         return;
       }
 
-      const user = interaction.options.getUser("membro", true);
+      await interaction.deferReply({ ephemeral: true });
 
-      try {
-        await user.send("VAMO JOGAR VAVA - VAMO JOGAR VAVA - VAMO JOGAR VAVA");
-      } catch {
-        await interaction.reply({
-          content: `Nao consegui mandar mensagem privada para ${user}.`,
-          ephemeral: true,
-        });
+      const members = await interaction.guild.members.fetch();
+      const valorantMembers = members.filter(
+        (member) => !member.user.bot && member.roles.cache.has(config.valorantRoleId)
+      );
+
+      if (!valorantMembers.size) {
+        await interaction.editReply("Nao encontrei ninguem com o cargo Valorant.");
         return;
       }
 
-      await interaction.reply({
-        content: `Chamei ${user} para jogar VAVA no privado.`,
-        ephemeral: true,
-      });
+      let sent = 0;
+      let failed = 0;
+
+      for (const member of valorantMembers.values()) {
+        try {
+          await member.send("VAMO JOGAR VAVA - VAMO JOGAR VAVA - VAMO JOGAR VAVA");
+          sent += 1;
+        } catch {
+          failed += 1;
+        }
+      }
+
+      await interaction.editReply(
+        `Chamei ${sent} pessoa(s) com o cargo Valorant no privado.` +
+          (failed ? ` Nao consegui mandar para ${failed}.` : "")
+      );
     },
   },
   {
