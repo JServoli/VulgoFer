@@ -69,6 +69,25 @@ async function handleButton(interaction) {
     return;
   }
 
+  if (interaction.customId === customIds.claimValorantRole) {
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+
+    if (member.roles.cache.has(config.valorantRoleId)) {
+      await interaction.reply({
+        content: "Voce ja tem o cargo Valorant.",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    await member.roles.add(config.valorantRoleId, `Cargo Valorant pedido por ${interaction.user.tag}`);
+    await interaction.reply({
+      content: `Cargo <@&${config.valorantRoleId}> adicionado.`,
+      ephemeral: true,
+    });
+    return;
+  }
+
   if (!isAdmin(interaction)) {
     await interaction.reply({
       content: "So administradores podem confirmar essa acao.",

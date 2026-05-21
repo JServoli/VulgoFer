@@ -20,6 +20,7 @@ export const config = {
     process.env.BIRTHDAY_ANNOUNCEMENT_CHANNEL_ID ??
     process.env.RANDOM_MESSAGE_CHANNEL_ID ??
     "769408270515044362",
+  valorantRoleId: process.env.VALORANT_ROLE_ID ?? "1507115093282787388",
   protectedUserId: process.env.DISCORD_PROTECTED_USER_ID ?? "338809624474157056",
   voiceLeaveRequiredApprovals: Number(process.env.VOICE_LEAVE_REQUIRED_APPROVALS ?? 3),
 };

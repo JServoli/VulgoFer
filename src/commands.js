@@ -15,6 +15,7 @@ import { getVoiceRanking } from "./voiceRanking.js";
 export const customIds = {
   confirmKickProtectedUser: "protected-user:kick-confirm",
   confirmLeaveVoice: "voice-lock:leave-confirm",
+  claimValorantRole: "valorant:claim-role",
 };
 
 function adminOnly(builder) {
@@ -546,6 +547,59 @@ export const commands = [
 
       const phrase = store.phrases[Math.floor(Math.random() * store.phrases.length)];
       await interaction.reply(phrase.text);
+    },
+  },
+  {
+    data: new SlashCommandBuilder()
+      .setName("valorant")
+      .setDescription("Acoes para jogar Valorant.")
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("cargo")
+          .setDescription("Manda o botao para pegar o cargo Valorant.")
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("chamar")
+          .setDescription("Chama alguem para jogar Valorant no privado.")
+          .addUserOption((option) =>
+            option.setName("membro").setDescription("Quem chamar para o VAVA.").setRequired(true)
+          )
+      ),
+    async execute(interaction) {
+      const subcommand = interaction.options.getSubcommand();
+
+      if (subcommand === "cargo") {
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(customIds.claimValorantRole)
+            .setLabel("Pegar cargo Valorant")
+            .setStyle(ButtonStyle.Primary)
+        );
+
+        await interaction.reply({
+          content: `Clique no botao para ganhar o cargo <@&${config.valorantRoleId}>.`,
+          components: [row],
+        });
+        return;
+      }
+
+      const user = interaction.options.getUser("membro", true);
+
+      try {
+        await user.send("VAMO JOGAR VAVA - VAMO JOGAR VAVA - VAMO JOGAR VAVA");
+      } catch {
+        await interaction.reply({
+          content: `Nao consegui mandar mensagem privada para ${user}.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      await interaction.reply({
+        content: `Chamei ${user} para jogar VAVA no privado.`,
+        ephemeral: true,
+      });
     },
   },
   {
