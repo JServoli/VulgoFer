@@ -16,6 +16,10 @@ export const config = {
   announcementChannelId: process.env.DISCORD_ANNOUNCEMENT_CHANNEL_ID,
   randomMessageChannelId: process.env.RANDOM_MESSAGE_CHANNEL_ID ?? "769408270515044362",
   randomMessageText: process.env.RANDOM_MESSAGE_TEXT ?? "o baliau é gay",
+  birthdayAnnouncementChannelId:
+    process.env.BIRTHDAY_ANNOUNCEMENT_CHANNEL_ID ??
+    process.env.RANDOM_MESSAGE_CHANNEL_ID ??
+    "769408270515044362",
   protectedUserId: process.env.DISCORD_PROTECTED_USER_ID ?? "338809624474157056",
   voiceLeaveRequiredApprovals: Number(process.env.VOICE_LEAVE_REQUIRED_APPROVALS ?? 3),
 };
