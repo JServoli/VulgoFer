@@ -2,6 +2,7 @@ import { Client, Events, GatewayIntentBits, PermissionFlagsBits } from "discord.
 import { commands, customIds } from "./commands.js";
 import { config } from "./config.js";
 import { startBirthdayScheduler } from "./birthdayScheduler.js";
+import { startRandomMessageScheduler } from "./randomMessageScheduler.js";
 import {
   enforceVoiceLock,
   leaveLockedVoiceChannel,
@@ -119,6 +120,7 @@ client.once(Events.ClientReady, (readyClient) => {
   trackInitialVoiceStates(client);
   startVoiceLock(client);
   startBirthdayScheduler(client);
+  startRandomMessageScheduler(client);
 });
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
