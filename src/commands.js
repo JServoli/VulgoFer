@@ -524,14 +524,6 @@ export const commands = [
       const store = await loadServerStore();
 
       if (subcommand === "adicionar") {
-        if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-          await interaction.reply({
-            content: "So administradores podem adicionar frases.",
-            ephemeral: true,
-          });
-          return;
-        }
-
         const text = interaction.options.getString("texto", true);
         store.phrases.push({
           text,
