@@ -608,7 +608,10 @@ export const commands = [
 
       for (const member of valorantMembers.values()) {
         try {
-          await member.send("VAMO JOGAR VAVA - VAMO JOGAR VAVA - VAMO JOGAR VAVA");
+          await member.send(
+            `${interaction.user} ESTA CHAMANDO PRA JOGAR VAVA VALORANT\n` +
+              "VAMO JOGAR VAVA - VAMO JOGAR VAVA - VAMO JOGAR VAVA"
+          );
           sent += 1;
         } catch {
           failed += 1;
