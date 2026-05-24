@@ -8,6 +8,7 @@ const emptyStore = {
   counters: {
     protectedKickAttempts: 0,
   },
+  lastAnnouncedUpdate: null,
   voiceRanking: {},
 };
 

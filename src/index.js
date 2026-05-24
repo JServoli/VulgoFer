@@ -9,6 +9,7 @@ import {
   startVoiceLock,
 } from "./voiceLock.js";
 import { loadServerStore, saveServerStore } from "./serverStore.js";
+import { announceUpdate } from "./updateLog.js";
 import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
 
 const client = new Client({
@@ -144,6 +145,7 @@ client.once(Events.ClientReady, (readyClient) => {
   startVoiceLock(client);
   startBirthdayScheduler(client);
   startRandomMessageScheduler(client);
+  announceUpdate(client).catch(console.error);
 });
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
