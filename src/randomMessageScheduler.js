@@ -1,11 +1,6 @@
 import { config } from "./config.js";
 
-const MIN_DELAY = 60 * 60 * 1000;
-const MAX_DELAY = 120 * 60 * 1000;
-
-function nextDelay() {
-  return MIN_DELAY + Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1));
-}
+const MESSAGE_INTERVAL = 6 * 60 * 60 * 1000;
 
 async function sendRandomMessage(client) {
   const channel = await client.channels.fetch(config.randomMessageChannelId);
@@ -26,7 +21,7 @@ export function startRandomMessageScheduler(client) {
   const scheduleNext = () => {
     setTimeout(() => {
       sendRandomMessage(client).catch(console.error).finally(scheduleNext);
-    }, nextDelay());
+    }, MESSAGE_INTERVAL);
   };
 
   scheduleNext();

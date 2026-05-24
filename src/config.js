@@ -15,7 +15,7 @@ export const config = {
   voiceChannelId: process.env.DISCORD_VOICE_CHANNEL_ID,
   announcementChannelId: process.env.DISCORD_ANNOUNCEMENT_CHANNEL_ID,
   randomMessageChannelId: process.env.RANDOM_MESSAGE_CHANNEL_ID ?? "769408270515044362",
-  randomMessageText: process.env.RANDOM_MESSAGE_TEXT ?? "o baliau é gay",
+  randomMessageText: process.env.RANDOM_MESSAGE_TEXT ?? "O Baliau é gay",
   birthdayAnnouncementChannelId:
     process.env.BIRTHDAY_ANNOUNCEMENT_CHANNEL_ID ??
     process.env.RANDOM_MESSAGE_CHANNEL_ID ??
