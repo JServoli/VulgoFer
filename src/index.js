@@ -9,6 +9,7 @@ import {
   startVoiceLock,
 } from "./voiceLock.js";
 import { loadServerStore, saveServerStore } from "./serverStore.js";
+import { startScheduledMessages } from "./scheduledMessages.js";
 import { announceUpdate } from "./updateLog.js";
 import { logVoiceModeration } from "./voiceModerationLog.js";
 import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
@@ -146,6 +147,7 @@ client.once(Events.ClientReady, (readyClient) => {
   startVoiceLock(client);
   startBirthdayScheduler(client);
   startRandomMessageScheduler(client);
+  startScheduledMessages(client);
   announceUpdate(client).catch(console.error);
 });
 

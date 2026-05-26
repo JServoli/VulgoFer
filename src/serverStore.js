@@ -9,6 +9,7 @@ const emptyStore = {
     protectedKickAttempts: 0,
   },
   lastAnnouncedUpdate: null,
+  scheduledMessagesSent: {},
   voiceRanking: {},
 };
 
@@ -48,6 +49,10 @@ function mergeStore(store) {
     voiceRanking: {
       ...emptyStore.voiceRanking,
       ...store.voiceRanking,
+    },
+    scheduledMessagesSent: {
+      ...emptyStore.scheduledMessagesSent,
+      ...store.scheduledMessagesSent,
     },
   };
 }
