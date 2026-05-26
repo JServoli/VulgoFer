@@ -14,12 +14,22 @@ async function getCurrentRevision() {
   }
 }
 
-export async function announceUpdate(client, details = "Bot atualizado e reiniciado.") {
+async function getCurrentSummary() {
+  try {
+    const { stdout } = await execFileAsync("git", ["log", "-1", "--pretty=%s"]);
+    return stdout.trim();
+  } catch {
+    return null;
+  }
+}
+
+export async function announceUpdate(client, details = null) {
   if (!config.updateLogChannelId) {
     return;
   }
 
   const revision = await getCurrentRevision();
+  const summary = details ?? (await getCurrentSummary()) ?? "Bot atualizado e reiniciado.";
   const store = await loadServerStore();
   const updateKey = revision ?? new Date().toISOString();
 
@@ -34,7 +44,7 @@ export async function announceUpdate(client, details = "Bot atualizado e reinici
   }
 
   await channel.send(
-    ["Log de Atualizacao", details, revision ? `Versao: ${revision}` : null]
+    ["**Log de Atualizacao**", `Resumo: ${summary}`, revision ? `Versao: \`${revision}\`` : null]
       .filter(Boolean)
       .join("\n")
   );
