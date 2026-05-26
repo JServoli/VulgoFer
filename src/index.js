@@ -10,6 +10,7 @@ import {
 } from "./voiceLock.js";
 import { loadServerStore, saveServerStore } from "./serverStore.js";
 import { announceUpdate } from "./updateLog.js";
+import { logVoiceModeration } from "./voiceModerationLog.js";
 import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
 
 const client = new Client({
@@ -150,6 +151,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   await trackVoiceStateUpdate(oldState, newState);
+  logVoiceModeration(oldState, newState).catch(console.error);
 
   if (oldState.member?.id !== client.user.id && newState.member?.id !== client.user.id) {
     return;
