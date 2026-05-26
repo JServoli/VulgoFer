@@ -19,6 +19,14 @@ function isRecentEntry(entry, memberId) {
   return entry.executor?.id && entry.executor.id !== memberId;
 }
 
+function isRecentDisconnectEntry(entry) {
+  return (
+    entry?.executor?.id &&
+    entry.action === AuditLogEvent.MemberDisconnect &&
+    Date.now() - entry.createdTimestamp <= AUDIT_LOG_WINDOW
+  );
+}
+
 async function findVoiceAuditEntry(guild, memberId, type, { requireTarget = true } = {}) {
   const logs = await guild.fetchAuditLogs({ type, limit: 10 });
 
@@ -36,14 +44,16 @@ async function findVoiceAuditEntry(guild, memberId, type, { requireTarget = true
 }
 
 async function findDisconnectAuditEntry(guild, memberId) {
-  return (
-    (await findVoiceAuditEntry(guild, memberId, AuditLogEvent.MemberDisconnect, {
-      requireTarget: false,
-    })) ??
-    (await findVoiceAuditEntry(guild, memberId, AuditLogEvent.MemberMove, {
-      requireTarget: false,
-    }))
-  );
+  const logs = await guild.fetchAuditLogs({ type: AuditLogEvent.MemberDisconnect, limit: 10 });
+  const entry = logs.entries.find(isRecentDisconnectEntry);
+
+  if (entry) {
+    return entry;
+  }
+
+  return findVoiceAuditEntry(guild, memberId, AuditLogEvent.MemberMove, {
+    requireTarget: false,
+  });
 }
 
 async function findVoiceAuditEntryWithRetry(guild, memberId, getEntry) {
