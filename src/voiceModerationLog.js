@@ -1,8 +1,9 @@
 import { AuditLogEvent } from "discord.js";
 import { config } from "./config.js";
 
-const AUDIT_LOG_WAIT = 4000;
-const AUDIT_LOG_WINDOW = 45000;
+const AUDIT_LOG_RETRIES = 10;
+const AUDIT_LOG_RETRY_DELAY = 3000;
+const AUDIT_LOG_WINDOW = 90000;
 
 function wait(milliseconds) {
   return new Promise((resolve) => {
@@ -19,7 +20,7 @@ function isRecentEntry(entry, memberId) {
 }
 
 async function findVoiceAuditEntry(guild, memberId, type, { requireTarget = true } = {}) {
-  const logs = await guild.fetchAuditLogs({ type, limit: 5 });
+  const logs = await guild.fetchAuditLogs({ type, limit: 10 });
 
   return logs.entries.find((entry) => {
     if (!isRecentEntry(entry, memberId)) {
@@ -32,6 +33,44 @@ async function findVoiceAuditEntry(guild, memberId, type, { requireTarget = true
 
     return !entry.target?.id || entry.target.id === memberId;
   });
+}
+
+async function findDisconnectAuditEntry(guild, memberId) {
+  return (
+    (await findVoiceAuditEntry(guild, memberId, AuditLogEvent.MemberDisconnect, {
+      requireTarget: false,
+    })) ??
+    (await findVoiceAuditEntry(guild, memberId, AuditLogEvent.MemberMove, {
+      requireTarget: false,
+    }))
+  );
+}
+
+async function findVoiceAuditEntryWithRetry(guild, memberId, getEntry) {
+  for (let attempt = 1; attempt <= AUDIT_LOG_RETRIES; attempt += 1) {
+    const entry = await getEntry();
+
+    if (entry?.executor) {
+      return entry;
+    }
+
+    if (attempt < AUDIT_LOG_RETRIES) {
+      await wait(AUDIT_LOG_RETRY_DELAY);
+    }
+  }
+
+  const logs = await guild.fetchAuditLogs({ limit: 5 });
+  const recent = logs.entries
+    .filter((entry) => Date.now() - entry.createdTimestamp <= AUDIT_LOG_WINDOW)
+    .map((entry) => ({
+      action: entry.action,
+      executor: entry.executor?.tag ?? entry.executor?.id,
+      target: entry.target?.id,
+      ageMs: Date.now() - entry.createdTimestamp,
+    }));
+
+  console.log("Nao encontrei audit log de call para", memberId, recent);
+  return null;
 }
 
 async function sendVoiceLog(client, content) {
@@ -54,16 +93,11 @@ export async function logVoiceModeration(oldState, newState) {
     return;
   }
 
-  await wait(AUDIT_LOG_WAIT);
-
-  const entry = newState.channelId
-    ? await findVoiceAuditEntry(newState.guild, member.id, AuditLogEvent.MemberMove)
-    : (await findVoiceAuditEntry(newState.guild, member.id, AuditLogEvent.MemberDisconnect, {
-        requireTarget: false,
-      })) ??
-      (await findVoiceAuditEntry(newState.guild, member.id, AuditLogEvent.MemberMove, {
-        requireTarget: false,
-      }));
+  const entry = await findVoiceAuditEntryWithRetry(newState.guild, member.id, () =>
+    newState.channelId
+      ? findVoiceAuditEntry(newState.guild, member.id, AuditLogEvent.MemberMove)
+      : findDisconnectAuditEntry(newState.guild, member.id)
+  );
 
   if (!entry?.executor) {
     return;
