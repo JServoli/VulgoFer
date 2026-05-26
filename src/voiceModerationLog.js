@@ -1,8 +1,8 @@
 import { AuditLogEvent } from "discord.js";
 import { config } from "./config.js";
 
-const AUDIT_LOG_WAIT = 1200;
-const AUDIT_LOG_WINDOW = 8000;
+const AUDIT_LOG_WAIT = 1800;
+const AUDIT_LOG_WINDOW = 12000;
 
 function wait(milliseconds) {
   return new Promise((resolve) => {
@@ -10,22 +10,28 @@ function wait(milliseconds) {
   });
 }
 
-function isRelevantEntry(entry, memberId) {
+function isRecentEntry(entry, memberId) {
   if (!entry || Date.now() - entry.createdTimestamp > AUDIT_LOG_WINDOW) {
     return false;
   }
 
-  if (entry.executor?.id === memberId) {
-    return false;
-  }
-
-  return !entry.target?.id || entry.target.id === memberId;
+  return entry.executor?.id && entry.executor.id !== memberId;
 }
 
 async function findVoiceAuditEntry(guild, memberId, type) {
   const logs = await guild.fetchAuditLogs({ type, limit: 5 });
 
-  return logs.entries.find((entry) => isRelevantEntry(entry, memberId));
+  return logs.entries.find((entry) => {
+    if (!isRecentEntry(entry, memberId)) {
+      return false;
+    }
+
+    if (type === AuditLogEvent.MemberDisconnect) {
+      return true;
+    }
+
+    return !entry.target?.id || entry.target.id === memberId;
+  });
 }
 
 async function sendVoiceLog(client, content) {
