@@ -125,6 +125,15 @@ o deploy falha e avisa, em vez de apagar o trabalho.
 - `/limpar quantidade`: apaga mensagens recentes.
 - `/cargo dar membro cargo`: da um cargo para um membro.
 - `/cargo remover membro cargo`: remove um cargo de um membro.
+- `/wishlist adicionar produto`: monitora o preco de um produto e posta os melhores precos atuais no canal da wishlist.
+- `/wishlist listar`: mostra os produtos que voce monitora.
+- `/wishlist remover item`: para de monitorar um produto (numero do `/wishlist listar`).
+
+### Wishlist / radar de promocoes
+
+Os precos vem do [Zoom](https://www.zoom.com.br), comparador de lojas brasileiras (`src/priceSource.js` le o JSON `__NEXT_DATA__` das paginas, sem dependencia extra).
+O pedido fica salvo em `data/wishlist.json` (produto -> usuarios). A cada `WISHLIST_CHECK_INTERVAL_MINUTES` o bot confere os produtos de novo e, se o menor preco cair pelo menos `WISHLIST_MIN_DROP_PERCENT`%, avisa no `WISHLIST_CHANNEL_ID` marcando quem monitora, com o link de compra.
+Se o Zoom mudar o layout, o log mostra `__NEXT_DATA__ nao encontrado` e so o `priceSource.js` precisa de ajuste.
 
 Para expulsar o membro alvo, o cargo do bot precisa estar acima do cargo dele na hierarquia do servidor.
 Para alterar cargos e apelidos, o cargo do bot tambem precisa estar acima dos cargos envolvidos.

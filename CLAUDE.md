@@ -9,6 +9,8 @@ Bot do Discord "Baliau Thomossex". Node >= 20, ESM, discord.js v14.
 - `src/config.js` - leitura do `.env`
 - `src/deploy-commands.js` - registra os slash commands na API do Discord
 - `src/*Store.js` - persistencia em arquivo (`data/`, fora do git)
+- `src/priceSource.js` - busca de precos no Zoom (scraping do `__NEXT_DATA__`)
+- `src/wishlistMonitor.js` - relatorio da wishlist e loop de checagem de precos
 - `deploy/` - units do systemd
 - `scripts/setup-vm.sh` - instalacao idempotente da VM
 - `scripts/deploy.sh` - pull do GitHub + restart do servico

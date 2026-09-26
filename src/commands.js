@@ -11,6 +11,9 @@ import { config } from "./config.js";
 import { joinLockedVoiceChannel } from "./voiceLock.js";
 import { formatDuration, loadServerStore, saveServerStore } from "./serverStore.js";
 import { getVoiceRanking } from "./voiceRanking.js";
+import { formatPrice, getProductOffers, searchProducts } from "./priceSource.js";
+import { loadWishlistStore, saveWishlistStore, userItems } from "./wishlistStore.js";
+import { postWishlistReport } from "./wishlistMonitor.js";
 
 export const customIds = {
   confirmKickProtectedUser: "protected-user:kick-confirm",
@@ -728,6 +731,152 @@ export const commands = [
         content: `Cargo ${role} removido de ${user}.`,
         ephemeral: true,
       });
+    },
+  },
+  {
+    data: new SlashCommandBuilder()
+      .setName("wishlist")
+      .setDescription("Radar de promocoes: monitora o preco de produtos.")
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("adicionar")
+          .setDescription("Monitora um produto e avisa quando o preco cair.")
+          .addStringOption((option) =>
+            option
+              .setName("produto")
+              .setDescription("O que voce quer, ex: PS5 Slim, iPhone 15 128GB.")
+              .setRequired(true)
+              .setMaxLength(100)
+          )
+      )
+      .addSubcommand((subcommand) =>
+        subcommand.setName("listar").setDescription("Mostra os produtos que voce monitora.")
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("remover")
+          .setDescription("Para de monitorar um produto.")
+          .addIntegerOption((option) =>
+            option
+              .setName("item")
+              .setDescription("Numero do item em /wishlist listar.")
+              .setRequired(true)
+              .setMinValue(1)
+          )
+      ),
+    async execute(interaction) {
+      const subcommand = interaction.options.getSubcommand();
+      const userId = interaction.user.id;
+
+      if (!config.wishlistChannelId) {
+        await interaction.reply({
+          content: "A wishlist esta desativada (WISHLIST_CHANNEL_ID nao configurado).",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (subcommand === "listar") {
+        const store = await loadWishlistStore();
+        const lines = userItems(store, userId).map(
+          (item, index) =>
+            `${index + 1}. **${item.name}** - ${
+              item.lastPrice ? formatPrice(item.lastPrice) : "sem preco"
+            }`
+        );
+
+        await interaction.reply({
+          content: lines.length
+            ? `Sua wishlist:\n${lines.join("\n")}`
+            : "Sua wishlist esta vazia. Use `/wishlist adicionar`.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (subcommand === "remover") {
+        const store = await loadWishlistStore();
+        const item = userItems(store, userId)[interaction.options.getInteger("item", true) - 1];
+
+        if (!item) {
+          await interaction.reply({
+            content: "Numero invalido. Confira em `/wishlist listar`.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        delete store.products[item.productId].watchers[userId];
+        if (!Object.keys(store.products[item.productId].watchers).length) {
+          delete store.products[item.productId];
+        }
+        await saveWishlistStore(store);
+
+        await interaction.reply({
+          content: `**${item.name}** saiu da sua wishlist.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      // adicionar: a busca leva alguns segundos, entao responde depois.
+      const query = interaction.options.getString("produto", true).trim();
+      await interaction.deferReply({ ephemeral: true });
+
+      const store = await loadWishlistStore();
+      if (userItems(store, userId).length >= config.wishlistMaxItemsPerUser) {
+        await interaction.editReply(
+          `Limite de ${config.wishlistMaxItemsPerUser} itens atingido. Remova um com \`/wishlist remover\`.`
+        );
+        return;
+      }
+
+      const results = await searchProducts(query);
+      if (!results.length) {
+        await interaction.editReply(`Nao achei nenhum produto para "${query}". Tente outro nome.`);
+        return;
+      }
+
+      const [product, ...alternatives] = results;
+      if (store.products[product.id]?.watchers[userId]) {
+        await interaction.editReply(`**${product.name}** ja esta na sua wishlist.`);
+        return;
+      }
+
+      const details = await getProductOffers(product);
+      const currentPrice = details.bestOffer?.price ?? product.price;
+
+      const entry = store.products[product.id] ?? {
+        name: product.name,
+        path: product.path,
+        lastPrice: currentPrice,
+        lowestSeen: currentPrice,
+        checkedAt: new Date().toISOString(),
+        watchers: {},
+      };
+      entry.watchers[userId] = {
+        query,
+        addedAt: new Date().toISOString(),
+        priceWhenAdded: currentPrice,
+      };
+      store.products[product.id] = entry;
+      await saveWishlistStore(store);
+
+      await postWishlistReport(interaction.client, userId, product, details);
+
+      await interaction.editReply(
+        [
+          `**${product.name}** entrou na sua wishlist. Resultado em <#${config.wishlistChannelId}>.`,
+          alternatives.length
+            ? `Nao era esse? Remova e tente um nome mais especifico, como: ${alternatives
+                .slice(0, 3)
+                .map((alt) => `"${alt.name}"`)
+                .join(", ")}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      );
     },
   },
 ];

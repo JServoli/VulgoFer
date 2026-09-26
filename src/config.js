@@ -25,4 +25,8 @@ export const config = {
   valorantRoleId: process.env.VALORANT_ROLE_ID ?? "1507115093282787388",
   protectedUserId: process.env.DISCORD_PROTECTED_USER_ID ?? "338809624474157056",
   voiceLeaveRequiredApprovals: Number(process.env.VOICE_LEAVE_REQUIRED_APPROVALS ?? 3),
+  wishlistChannelId: process.env.WISHLIST_CHANNEL_ID,
+  wishlistCheckIntervalMinutes: Number(process.env.WISHLIST_CHECK_INTERVAL_MINUTES ?? 60),
+  wishlistMinDropPercent: Number(process.env.WISHLIST_MIN_DROP_PERCENT ?? 1),
+  wishlistMaxItemsPerUser: Number(process.env.WISHLIST_MAX_ITEMS_PER_USER ?? 10),
 };

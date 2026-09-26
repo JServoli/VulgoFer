@@ -12,6 +12,7 @@ import { startScheduledMessages } from "./scheduledMessages.js";
 import { announceUpdate } from "./updateLog.js";
 import { logVoiceModeration } from "./voiceModerationLog.js";
 import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
+import { startWishlistMonitor } from "./wishlistMonitor.js";
 
 const client = new Client({
   intents: [
@@ -146,6 +147,7 @@ client.once(Events.ClientReady, (readyClient) => {
   startVoiceLock(client);
   startBirthdayScheduler(client);
   startScheduledMessages(client);
+  startWishlistMonitor(client);
   announceUpdate(client).catch(console.error);
 });
 
