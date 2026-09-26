@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { writeJsonAtomic } from "./jsonFile.js";
 
 const storePath = join(process.cwd(), "data", "birthdays.json");
 
@@ -29,8 +30,7 @@ export async function loadBirthdayStore() {
 }
 
 export async function saveBirthdayStore(store) {
-  await ensureStore();
-  await writeFile(storePath, `${JSON.stringify(store, null, 2)}\n`);
+  await writeJsonAtomic(storePath, store);
 }
 
 export function parseBirthday(input) {

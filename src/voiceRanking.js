@@ -57,6 +57,30 @@ async function closeSession(userId) {
   await saveServerStore(store);
 }
 
+// Grava no ranking o tempo das sessoes em andamento, sem encerra-las.
+// Sem isso, restart ou queda do bot apagava o tempo de quem estava na call.
+export async function flushVoiceSessions() {
+  if (!activeSessions.size) {
+    return;
+  }
+
+  const now = Date.now();
+  const store = await loadServerStore();
+
+  for (const [userId, startedAt] of activeSessions.entries()) {
+    store.voiceRanking[userId] = (store.voiceRanking[userId] ?? 0) + now - startedAt;
+    activeSessions.set(userId, now);
+  }
+
+  await saveServerStore(store);
+}
+
+export function startVoiceSessionFlush() {
+  setInterval(() => {
+    flushVoiceSessions().catch(console.error);
+  }, 5 * 60 * 1000);
+}
+
 export async function getVoiceRanking(limit = 10) {
   const store = await loadServerStore();
   const totals = { ...store.voiceRanking };

@@ -11,7 +11,12 @@ import { loadServerStore, saveServerStore } from "./serverStore.js";
 import { startScheduledMessages } from "./scheduledMessages.js";
 import { announceUpdate } from "./updateLog.js";
 import { logVoiceModeration } from "./voiceModerationLog.js";
-import { trackInitialVoiceStates, trackVoiceStateUpdate } from "./voiceRanking.js";
+import {
+  flushVoiceSessions,
+  startVoiceSessionFlush,
+  trackInitialVoiceStates,
+  trackVoiceStateUpdate,
+} from "./voiceRanking.js";
 import { startWishlistMonitor } from "./wishlistMonitor.js";
 
 const client = new Client({
@@ -144,6 +149,7 @@ async function handleButton(interaction) {
 client.once(Events.ClientReady, (readyClient) => {
   console.log(`Baliau Thomossex conectado como ${readyClient.user.tag}`);
   trackInitialVoiceStates(client);
+  startVoiceSessionFlush();
   startVoiceLock(client);
   startBirthdayScheduler(client);
   startScheduledMessages(client);
@@ -206,5 +212,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   }
 });
+
+// systemd manda SIGTERM e o PM2 manda SIGINT: salva o tempo de call antes de sair.
+async function shutdown(signal) {
+  console.log(`${signal} recebido, salvando sessoes de call e desligando.`);
+
+  try {
+    await flushVoiceSessions();
+  } catch (error) {
+    console.error(error);
+  }
+
+  await client.destroy();
+  process.exit(0);
+}
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));
 
 await client.login(config.token);

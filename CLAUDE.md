@@ -13,7 +13,8 @@ Bot do Discord "Baliau Thomossex". Node >= 20, ESM, discord.js v14.
 - `src/wishlistMonitor.js` - relatorio da wishlist e loop de checagem de precos
 - `deploy/` - units do systemd
 - `scripts/setup-vm.sh` - instalacao idempotente da VM
-- `scripts/deploy.sh` - pull do GitHub + restart do servico
+- `scripts/deploy.sh` - pull do GitHub + restart do servico (passa pelo guarda da call)
+- `scripts/call-guard.js` - libera o restart so com gente na call e avisa antes
 
 ## Producao
 
@@ -39,6 +40,9 @@ bash ~/VulgoFer/scripts/deploy.sh      # atualizar para o ultimo commit
 - IDs de canal, cargo e usuario devem vir do `.env`. Hoje `src/config.js` ainda tem
   fallback chumbado (canais de log, `valorantRoleId`, `protectedUserId`) - migrar.
 - Mexeu no bot, reinicie o servico e confira o `journalctl` antes de dar por pronto.
+- Restart em producao so via `scripts/deploy.sh`: o `scripts/call-guard.js` so libera com alguem na call
+  junto com o bot (call vazia + bot saindo = a call acaba e o tempo dela zera) e antes avisa no
+  `RESTART_NOTICE_CHANNEL_ID` marcando quem esta la. Call vazia = restart adiado para a proxima execucao.
 - Diretorio raiz dos projetos na maquina local: `J:\Projetos`.
 - Ao concluir qualquer alteracao de codigo, pergunte:
   "Deseja fazer um commit automático dessa atualização?"

@@ -81,6 +81,15 @@ journalctl -u vulgofer-bot -n 100       # ultimos 100 eventos
 bash ~/VulgoFer/scripts/deploy.sh       # atualizar para o ultimo commit
 ```
 
+### Guarda da call
+
+O `deploy.sh` so reinicia o bot se houver alguem na call junto com ele: se o bot sair de uma call vazia, a call acaba e o tempo dela zera.
+Antes do restart, o `scripts/call-guard.js` avisa no `RESTART_NOTICE_CHANNEL_ID` marcando quem esta na call.
+Com a call vazia o codigo e atualizado mas o restart fica pendente (`.deployed-rev` guarda a versao que esta rodando) e e tentado de novo na proxima execucao.
+Emergencia: `FORCE_RESTART=1 bash scripts/deploy.sh`.
+
+O tempo de call do `/ranking-call` e salvo a cada 5 minutos e no desligamento, entao restart ou queda nao apagam mais as sessoes em andamento.
+
 ### Deploy automatico (opcional)
 
 ```bash

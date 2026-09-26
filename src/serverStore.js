@@ -1,5 +1,6 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { writeJsonAtomic } from "./jsonFile.js";
 
 const storePath = join(process.cwd(), "data", "server.json");
 
@@ -34,8 +35,7 @@ export async function loadServerStore() {
 }
 
 export async function saveServerStore(store) {
-  await ensureStore();
-  await writeFile(storePath, `${JSON.stringify(mergeStore(store), null, 2)}\n`);
+  await writeJsonAtomic(storePath, mergeStore(store));
 }
 
 function mergeStore(store) {
