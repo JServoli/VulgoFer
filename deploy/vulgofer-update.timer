@@ -1,0 +1,11 @@
+[Unit]
+Description=Checa atualizacoes do VulgoFer a cada 10 minutos
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+AccuracySec=1min
+Unit=vulgofer-update.service
+
+[Install]
+WantedBy=timers.target

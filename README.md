@@ -48,6 +48,57 @@ npm start
 
 Se `DISCORD_GUILD_ID` estiver preenchido, os comandos sao publicados apenas no servidor de teste. Sem ele, os comandos ficam globais e podem demorar para aparecer.
 
+## Hospedagem (Oracle Cloud Always Free)
+
+O bot roda 24/7 numa VM da Oracle Cloud, gerenciado pelo systemd.
+
+| Item | Valor |
+| --- | --- |
+| Instancia | `vulgofer-bot` (Ubuntu 22.04) |
+| Shape | `VM.Standard.E2.1.Micro` - 1 OCPU / 1 GB (Always Free) |
+| Regiao | `sa-saopaulo-1` (Brazil East) |
+| Servico | `vulgofer-bot.service` |
+| Deploy | `scripts/deploy.sh` - pull do GitHub + restart |
+
+### Primeira instalacao
+
+```bash
+ssh ubuntu@<ip-da-vm>
+curl -fsSL https://raw.githubusercontent.com/JServoli/VulgoFer/main/scripts/setup-vm.sh | bash
+nano ~/VulgoFer/.env        # preencher o DISCORD_TOKEN
+sudo systemctl restart vulgofer-bot
+```
+
+O `setup-vm.sh` e idempotente: instala o Node 20, cria 1 GB de swap (a micro tem so 1 GB de RAM),
+clona o repositorio, instala as dependencias, registra os comandos slash e habilita o servico no boot.
+
+### Operacao
+
+```bash
+sudo systemctl status vulgofer-bot      # estado atual
+journalctl -u vulgofer-bot -f           # logs ao vivo
+journalctl -u vulgofer-bot -n 100       # ultimos 100 eventos
+bash ~/VulgoFer/scripts/deploy.sh       # atualizar para o ultimo commit
+```
+
+### Deploy automatico (opcional)
+
+```bash
+sudo systemctl enable --now vulgofer-update.timer
+```
+
+A VM passa a checar o GitHub a cada 10 minutos e se atualiza sozinha quando aparece commit novo na `main`.
+O `npm ci` e o registro de comandos slash so rodam quando os arquivos correspondentes mudaram.
+O `git pull --ff-only` garante que uma edicao feita direto na VM nunca seja sobrescrita em silencio:
+o deploy falha e avisa, em vez de apagar o trabalho.
+
+### Resiliencia
+
+- `Restart=always` - o systemd sobe o bot de novo se o processo morrer.
+- `WantedBy=multi-user.target` - o bot volta sozinho depois de um reboot da VM.
+- `MemoryHigh=500M` / `MemoryMax=800M` - o bot nunca engole a VM inteira.
+- Swap de 1 GB - margem para picos de memoria do Node.
+
 ## Comandos
 
 - `/ping`: confere se o bot esta online.
@@ -78,4 +129,4 @@ Se `DISCORD_GUILD_ID` estiver preenchido, os comandos sao publicados apenas no s
 Para expulsar o membro alvo, o cargo do bot precisa estar acima do cargo dele na hierarquia do servidor.
 Para alterar cargos e apelidos, o cargo do bot tambem precisa estar acima dos cargos envolvidos.
 
-Enquanto o processo estiver rodando, o bot tenta voltar para a call configurada se for movido ou desconectado. Se o computador desligar ou o processo encerrar, o bot cai porque esta hospedado localmente.
+Enquanto o processo estiver rodando, o bot tenta voltar para a call configurada se for movido ou desconectado. O servico roda em VM com `Restart=always`, entao ele volta sozinho depois de uma queda do processo ou de um reboot da maquina.

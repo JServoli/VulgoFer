@@ -1,0 +1,33 @@
+[Unit]
+Description=VulgoFer - Baliau Thomossex (Discord bot)
+Documentation=https://github.com/JServoli/VulgoFer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/VulgoFer
+ExecStart=/usr/bin/node src/index.js
+# o proprio dotenv le o .env do WorkingDirectory: nada de segredo na unit
+Restart=always
+RestartSec=5
+StartLimitBurst=0
+
+# guarda-corpo para a VM.Standard.E2.1.Micro (1 GB de RAM)
+MemoryHigh=500M
+MemoryMax=800M
+
+# endurecimento basico
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/ubuntu/VulgoFer
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vulgofer
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=VulgoFer - checa o GitHub e faz deploy se houver commit novo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/VulgoFer
+ExecStart=/home/ubuntu/VulgoFer/scripts/deploy.sh
